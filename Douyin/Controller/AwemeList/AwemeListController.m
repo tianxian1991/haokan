@@ -57,7 +57,7 @@ NSString * const kAwemeListCell   = @"AwemeListCell";
     [super viewDidLoad];
     [self setBackgroundImage:@"img_video_loading"];
     [self setUpView];
-    [self setLeftButton:@"icon_titlebar_whiteback"];
+//    [self setLeftButton:@"icon_titlebar_whiteback"];
 }
 
 - (void)setUpView {
