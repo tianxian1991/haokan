@@ -29,7 +29,7 @@
 #define ColorWhiteAlpha60 [UIColor colorWithWhite:1.0 alpha:0.6]
 #endif
 
-@interface HomeViewController () <UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, OnTabTapActionDelegate>
+@interface HomeViewController () <UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, OnTabTapActionDelegate, UIGestureRecognizerDelegate>
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) UICollectionViewFlowLayout *flowLayout;
@@ -62,6 +62,9 @@
     
     // 默认显示"在追"页面
     [self showFollowingContent];
+    
+    // 添加左右滑动手势
+    [self setupSwipeGestures];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -96,7 +99,7 @@
     [_slideTabBar setLabels:@[@"在追", @"剧单", @"推荐"] tabIndex:0];
     
     // 修改SlideTabBar位置，使其居中显示
-    CGFloat tabBarWidth = ScreenWidth * 0.6; // 设置为屏幕宽度的60%
+    CGFloat tabBarWidth = ScreenWidth * 0.7; // 设置为屏幕宽度的60%
     _slideTabBar.frame = CGRectMake((ScreenWidth - tabBarWidth) / 2, StatusBarHeight, tabBarWidth, 40);
     _slideTabBar.backgroundColor = [UIColor clearColor]; // 设置背景透明
     
@@ -294,7 +297,7 @@
     }
     
     // 显示/隐藏搜索按钮和编辑按钮
-    _searchButton.hidden = (index != 1); // 仅在"剧单"标签显示搜索按钮
+    _searchButton.hidden = (index == 0); // 仅在"剧单"标签显示搜索按钮
     
     // 获取编辑按钮
     UIButton *editButton = [self.view viewWithTag:1002];
@@ -802,6 +805,120 @@
         UIButton *editButton = [self.view viewWithTag:1002];
         editButton.hidden = !hasData; // 有数据时显示，无数据时隐藏
     }
+}
+
+#pragma mark - Swipe Gestures
+
+- (void)setupSwipeGestures {
+    // 添加右滑手势（向右滑动，切换到前一个标签）
+    UISwipeGestureRecognizer *rightSwipe = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipe:)];
+    rightSwipe.direction = UISwipeGestureRecognizerDirectionRight;
+    [self.view addGestureRecognizer:rightSwipe];
+    
+    // 添加左滑手势（向左滑动，切换到后一个标签）
+    UISwipeGestureRecognizer *leftSwipe = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipe:)];
+    leftSwipe.direction = UISwipeGestureRecognizerDirectionLeft;
+    [self.view addGestureRecognizer:leftSwipe];
+    
+    // 设置手势代理，用于处理手势冲突
+    rightSwipe.delegate = self;
+    leftSwipe.delegate = self;
+}
+
+- (void)handleSwipe:(UISwipeGestureRecognizer *)gesture {
+    // 当前索引
+    NSInteger currentIndex = _currentTabIndex;
+    NSInteger newIndex = currentIndex;
+    
+    // 判断滑动方向
+    if (gesture.direction == UISwipeGestureRecognizerDirectionRight) {
+        // 右滑，切换到前一个标签
+        newIndex = MAX(0, currentIndex - 1);
+    } else if (gesture.direction == UISwipeGestureRecognizerDirectionLeft) {
+        // 左滑，切换到后一个标签
+        newIndex = MIN(2, currentIndex + 1);
+    }
+    
+    // 如果有变化，更新标签选择
+    if (newIndex != currentIndex) {
+        [_slideTabBar selectTabWithIndex:newIndex];
+    }
+}
+
+#pragma mark - UIGestureRecognizerDelegate
+
+// 实现UIGestureRecognizerDelegate协议，解决手势冲突
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
+    // 判断是否为我们添加的滑动手势
+    if ([gestureRecognizer isKindOfClass:[UISwipeGestureRecognizer class]]) {
+        UISwipeGestureRecognizer *swipe = (UISwipeGestureRecognizer *)gestureRecognizer;
+        
+        // 获取触摸点在视图中的位置
+        CGPoint location = [gestureRecognizer locationInView:self.view];
+        
+        // 检查触摸点是否在上半部分的区域（标签栏附近）
+        if (location.y < StatusBarHeight + 60) {
+            return YES; // 允许手势在上部区域开始
+        }
+        
+        // 根据当前页面判断是否允许滑动手势
+        if (_currentTabIndex == 0) { // 在追页面
+            // 如果是左滑，允许滑动到下一个页面
+            return swipe.direction == UISwipeGestureRecognizerDirectionLeft;
+        } else if (_currentTabIndex == 1) { // 剧单页面
+            // 允许左右滑动
+            return YES;
+        } else if (_currentTabIndex == 2) { // 推荐页面
+            // 如果是右滑，允许滑动到前一个页面
+            return swipe.direction == UISwipeGestureRecognizerDirectionRight;
+        }
+    }
+    
+    return YES;
+}
+
+// 处理手势冲突，确保滑动手势不会与其他滚动视图冲突
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    // 如果其中一个是滑动手势，另一个是滚动视图的手势
+    if (([gestureRecognizer isKindOfClass:[UISwipeGestureRecognizer class]] && 
+         [otherGestureRecognizer.view isKindOfClass:[UIScrollView class]]) ||
+        ([otherGestureRecognizer isKindOfClass:[UISwipeGestureRecognizer class]] && 
+         [gestureRecognizer.view isKindOfClass:[UIScrollView class]])) {
+        
+        // 获取滚动视图
+        UIScrollView *scrollView = nil;
+        if ([gestureRecognizer.view isKindOfClass:[UIScrollView class]]) {
+            scrollView = (UIScrollView *)gestureRecognizer.view;
+        } else if ([otherGestureRecognizer.view isKindOfClass:[UIScrollView class]]) {
+            scrollView = (UIScrollView *)otherGestureRecognizer.view;
+        }
+        
+        // 判断滚动视图是否已经到达边缘
+        if (scrollView) {
+            UISwipeGestureRecognizer *swipe = nil;
+            if ([gestureRecognizer isKindOfClass:[UISwipeGestureRecognizer class]]) {
+                swipe = (UISwipeGestureRecognizer *)gestureRecognizer;
+            } else if ([otherGestureRecognizer isKindOfClass:[UISwipeGestureRecognizer class]]) {
+                swipe = (UISwipeGestureRecognizer *)otherGestureRecognizer;
+            }
+            
+            if (swipe) {
+                if (swipe.direction == UISwipeGestureRecognizerDirectionRight) {
+                    // 只有当滚动视图已经滚动到最左侧时，才允许右滑手势
+                    return scrollView.contentOffset.x <= 0;
+                } else if (swipe.direction == UISwipeGestureRecognizerDirectionLeft) {
+                    // 只有当滚动视图已经滚动到最右侧时，才允许左滑手势
+                    return scrollView.contentOffset.x >= scrollView.contentSize.width - scrollView.bounds.size.width;
+                }
+            }
+        }
+        
+        // 默认不允许同时识别
+        return NO;
+    }
+    
+    // 其他情况下，允许同时识别多个手势
+    return YES;
 }
 
 #pragma mark - UICollectionViewDataSource

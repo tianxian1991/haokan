@@ -20,5 +20,6 @@
 @property (nonatomic, weak) id <OnTabTapActionDelegate> delegate;
 
 - (void)setLabels:(NSArray<NSString *> *)titles tabIndex:(NSInteger)tabIndex;
+- (void)selectTabWithIndex:(NSInteger)index;
 
 @end

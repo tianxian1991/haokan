@@ -151,4 +151,50 @@
     }
 }
 
+// 添加公共方法，用于支持左右滑动手势切换标签
+- (void)selectTabWithIndex:(NSInteger)index {
+    if (index < 0 || index >= _labels.count) {
+        return;
+    }
+    
+    // 获取存储的标签宽度和位置信息
+    NSArray *labelWidths = objc_getAssociatedObject(self, "labelWidths");
+    CGFloat padding = [objc_getAssociatedObject(self, "labelPadding") floatValue];
+    CGFloat startX = [objc_getAssociatedObject(self, "startX") floatValue];
+    
+    if (labelWidths) {
+        // 计算选中标签的X位置
+        CGFloat underlineX = startX;
+        for (int i = 0; i < index; i++) {
+            underlineX += [labelWidths[i] floatValue] + padding;
+        }
+        
+        // 获取选中标签的宽度
+        CGFloat underlineWidth = [labelWidths[index] floatValue];
+        
+        [UIView animateWithDuration:0.10
+                              delay:0
+             usingSpringWithDamping:0.8
+              initialSpringVelocity:0
+                            options:UIViewAnimationOptionCurveEaseInOut
+                         animations:^{
+                             // 更新下划线位置
+                             CGRect frame = self.slideLightView.frame;
+                             frame.origin.x = underlineX;
+                             frame.size.width = underlineWidth;
+                             [self.slideLightView setFrame:frame];
+                             
+                             // 更新标签颜色
+                             [self.labels enumerateObjectsUsingBlock:^(UILabel *label, NSUInteger idx, BOOL *stop) {
+                                 label.textColor = index == idx ? [UIColor whiteColor] : ColorWhiteAlpha60;
+                             }];
+                         } completion:^(BOOL finished) {
+                             // 通知代理切换标签
+                             if (self.delegate) {
+                                 [self.delegate onTabTapAction:index];
+                             }
+                         }];
+    }
+}
+
 @end
