@@ -76,10 +76,10 @@ static const NSInteger kAwemeListLikeShareTag   = 0x02;
     [_container addSubview:_pauseIcon];
     
     //init hoverTextView
-    _hoverTextView = [HoverTextView new];
-    _hoverTextView.delegate = self;
-    _hoverTextView.hoverDelegate = self;
-    [self addSubview:_hoverTextView];
+//    _hoverTextView = [HoverTextView new];
+//    _hoverTextView.delegate = self;
+//    _hoverTextView.hoverDelegate = self;
+//    [self addSubview:_hoverTextView];
     
     //init player status bar
     _playerStatusBar = [[UIView alloc]init];

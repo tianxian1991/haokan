@@ -285,7 +285,10 @@
         }
     }
     
+    // 安全移除当前内容视图控制器
     if (_currentContentVC) {
+        [_currentContentVC willMoveToParentViewController:nil];
+        [_currentContentVC.view removeFromSuperview];
         [_currentContentVC removeFromParentViewController];
         _currentContentVC = nil;
     }
@@ -572,110 +575,107 @@
 
 - (void)showRecommendContent {
     // 显示推荐内容（使用AwemeListController）
-    if (!_recommendVC) {
-        // 创建一个简单的Aweme对象作为初始数据
-        Aweme *dummyAweme = [[Aweme alloc] init];
-        dummyAweme.desc = @"加载中...";
-        dummyAweme.aweme_id = @"dummy_id";
-        
-        // 创建视频对象
-        Video *video = [[Video alloc] init];
-        
-        // 创建播放地址对象
-        id playAddr = [[NSClassFromString(@"Play_addr") alloc] init];
-        // 设置一个有效的URL数组
-        [playAddr setValue:@"play_addr_uri" forKey:@"uri"];
-        [playAddr setValue:@[@"https://example.com/video.mp4"] forKey:@"url_list"];
-        video.play_addr = playAddr;
-        
-        // 创建低质量播放地址对象
-        id playAddrLowbr = [[NSClassFromString(@"Play_addr_lowbr") alloc] init];
-        [playAddrLowbr setValue:@"play_addr_lowbr_uri" forKey:@"uri"];
-        [playAddrLowbr setValue:@[@"https://example.com/video_low.mp4"] forKey:@"url_list"];
-        video.play_addr_lowbr = playAddrLowbr;
-        
-        // 创建封面对象
-        id cover = [[NSClassFromString(@"Cover") alloc] init];
-        [cover setValue:@"cover_uri" forKey:@"uri"];
-        [cover setValue:@[@"https://example.com/cover.jpg"] forKey:@"url_list"];
-        video.cover = cover;
-        
-        // 设置其他必要的视频属性
-        video.width = 720;
-        video.height = 1280;
-        video.duration = 15000;
-        dummyAweme.video = video;
-        
-        // 创建用户对象
-        User *author = [[User alloc] init];
-        author.nickname = @"抖音用户";
-        author.uid = @"dummy_user_id";
-        
-        // 创建头像对象
-        id avatar = [[NSClassFromString(@"Avatar") alloc] init];
-        [avatar setValue:@"avatar_uri" forKey:@"uri"];
-        [avatar setValue:@[@"https://example.com/avatar.jpg"] forKey:@"url_list"];
-        
-        // 设置不同尺寸的头像
-        [author setValue:avatar forKey:@"avatar_thumb"];
-        [author setValue:avatar forKey:@"avatar_medium"];
-        [author setValue:avatar forKey:@"avatar_larger"];
-        
-        dummyAweme.author = author;
-        
-        // 创建统计信息
-        id statistics = [[NSClassFromString(@"Statistics") alloc] init];
-        [statistics setValue:@100 forKey:@"comment_count"];
-        [statistics setValue:@500 forKey:@"digg_count"];
-        [statistics setValue:@50 forKey:@"share_count"];
-        [statistics setValue:dummyAweme.aweme_id forKey:@"aweme_id"];
-        dummyAweme.statistics = statistics;
-        
-        // 创建分享信息
-        id shareInfo = [[NSClassFromString(@"Aweme_share_info") alloc] init];
-        [shareInfo setValue:@"分享视频" forKey:@"share_title"];
-        [shareInfo setValue:@"https://example.com/share" forKey:@"share_url"];
-        [shareInfo setValue:@"精彩视频" forKey:@"share_desc"];
-        dummyAweme.share_info = shareInfo;
-        
-        // 创建一个数组，包含一个简单的Aweme对象
-        NSMutableArray<Aweme *> *dummyData = [NSMutableArray arrayWithObject:dummyAweme];
-        
-        // 创建AwemeListController实例，传入初始数据
-        _recommendVC = [[AwemeListController alloc] initWithVideoData:dummyData
-                                                         currentIndex:0 
-                                                            pageIndex:1 
-                                                             pageSize:10 
-                                                            awemeType:AwemeWork 
-                                                                  uid:nil];
-        
-        // 隐藏导航栏及返回按钮
-        [_recommendVC initNavigationBarTransparent];
-        
-        // 获取子视图并隐藏返回按钮
-        [_recommendVC.navigationItem setHidesBackButton:YES animated:NO];
-        
-        // 清空左侧按钮
-        _recommendVC.navigationItem.leftBarButtonItem = nil;
-        
-        // 不调用setLeftButton方法，这样就不会显示返回按钮
-        Method originalMethod = class_getInstanceMethod([_recommendVC class], @selector(setLeftButton:));
-        if (originalMethod) {
-            Method replacementMethod = class_getInstanceMethod([self class], @selector(emptyMethod));
-            method_exchangeImplementations(originalMethod, replacementMethod);
-        }
+    
+    // 重置之前可能存在的recommendVC，以避免KVO问题
+    _recommendVC = nil;
+    
+    // 创建新的AwemeListController实例
+    // 创建一个简单的Aweme对象作为初始数据
+    Aweme *dummyAweme = [[Aweme alloc] init];
+    dummyAweme.desc = @"加载中...";
+    dummyAweme.aweme_id = @"dummy_id";
+    
+    // 创建视频对象
+    Video *video = [[Video alloc] init];
+    
+    // 创建播放地址对象
+    id playAddr = [[NSClassFromString(@"Play_addr") alloc] init];
+    // 设置一个有效的URL数组
+    [playAddr setValue:@"play_addr_uri" forKey:@"uri"];
+    [playAddr setValue:@[@"https://example.com/video.mp4"] forKey:@"url_list"];
+    video.play_addr = playAddr;
+    
+    // 创建低质量播放地址对象
+    id playAddrLowbr = [[NSClassFromString(@"Play_addr_lowbr") alloc] init];
+    [playAddrLowbr setValue:@"play_addr_lowbr_uri" forKey:@"uri"];
+    [playAddrLowbr setValue:@[@"https://example.com/video_low.mp4"] forKey:@"url_list"];
+    video.play_addr_lowbr = playAddrLowbr;
+    
+    // 创建封面对象
+    id cover = [[NSClassFromString(@"Cover") alloc] init];
+    [cover setValue:@"cover_uri" forKey:@"uri"];
+    [cover setValue:@[@"https://example.com/cover.jpg"] forKey:@"url_list"];
+    video.cover = cover;
+    
+    // 设置其他必要的视频属性
+    video.width = 720;
+    video.height = 1280;
+    video.duration = 15000;
+    dummyAweme.video = video;
+    
+    // 创建用户对象
+    User *author = [[User alloc] init];
+    author.nickname = @"抖音用户";
+    author.uid = @"dummy_user_id";
+    
+    // 创建头像对象
+    id avatar = [[NSClassFromString(@"Avatar") alloc] init];
+    [avatar setValue:@"avatar_uri" forKey:@"uri"];
+    [avatar setValue:@[@"https://example.com/avatar.jpg"] forKey:@"url_list"];
+    
+    // 设置不同尺寸的头像
+    [author setValue:avatar forKey:@"avatar_thumb"];
+    [author setValue:avatar forKey:@"avatar_medium"];
+    [author setValue:avatar forKey:@"avatar_larger"];
+    
+    dummyAweme.author = author;
+    
+    // 创建统计信息
+    id statistics = [[NSClassFromString(@"Statistics") alloc] init];
+    [statistics setValue:@100 forKey:@"comment_count"];
+    [statistics setValue:@500 forKey:@"digg_count"];
+    [statistics setValue:@50 forKey:@"share_count"];
+    [statistics setValue:dummyAweme.aweme_id forKey:@"aweme_id"];
+    dummyAweme.statistics = statistics;
+    
+    // 创建分享信息
+    id shareInfo = [[NSClassFromString(@"Aweme_share_info") alloc] init];
+    [shareInfo setValue:@"分享视频" forKey:@"share_title"];
+    [shareInfo setValue:@"https://example.com/share" forKey:@"share_url"];
+    [shareInfo setValue:@"精彩视频" forKey:@"share_desc"];
+    dummyAweme.share_info = shareInfo;
+    
+    // 创建一个数组，包含一个简单的Aweme对象
+    NSMutableArray<Aweme *> *dummyData = [NSMutableArray arrayWithObject:dummyAweme];
+    
+    // 创建AwemeListController实例，传入初始数据
+    _recommendVC = [[AwemeListController alloc] initWithVideoData:dummyData
+                                                     currentIndex:0 
+                                                        pageIndex:1 
+                                                         pageSize:10 
+                                                        awemeType:AwemeWork 
+                                                              uid:nil];
+    
+    // 在创建实例后直接替换setLeftButton方法，避免显示返回按钮
+    SEL setLeftButtonSelector = @selector(setLeftButton:);
+    Method setLeftButtonMethod = class_getInstanceMethod([_recommendVC class], setLeftButtonSelector);
+    if (setLeftButtonMethod) {
+        IMP emptyIMP = imp_implementationWithBlock(^(id _self, NSString *imageName) {
+            // 空实现，什么都不做
+        });
+        method_setImplementation(setLeftButtonMethod, emptyIMP);
     }
+    
+    // 隐藏导航栏及返回按钮
+    [_recommendVC initNavigationBarTransparent];
+    [_recommendVC.navigationItem setHidesBackButton:YES animated:NO];
+    _recommendVC.navigationItem.leftBarButtonItem = nil;
     
     [self addChildViewController:_recommendVC];
     [self.contentContainerView addSubview:_recommendVC.view];
     _recommendVC.view.frame = self.contentContainerView.bounds;
     [_recommendVC didMoveToParentViewController:self];
     _currentContentVC = _recommendVC;
-}
-
-// 空方法，用于替换setLeftButton方法
-- (void)emptyMethod:(NSString *)imageName {
-    // 空实现，什么都不做
 }
 
 // 添加空状态视图
