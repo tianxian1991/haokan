@@ -1,25 +1,2 @@
 # CocoaPods
 Pods/
-Podfile.lock
-Podfile
-
-# Xcode
-*.xcworkspace
-*.xcuserdatad/
-*.xcuserdata/
-*.xcscheme
-*.dSYM
-*.hmap
-
-# Douyin project files
-Douyin.xcodeproj/project.pbxproj
-Pods/Manifest.lock
-Pods/Pods.xcodeproj/project.pbxproj
-Pods/Target\ Support\ Files/Pods-Douyin/Pods-Douyin.debug.xcconfig
-Pods/Target\ Support\ Files/Pods-Douyin/Pods-Douyin.release.xcconfig
-
-# Derived Data
-DerivedData/
-
-# Archives
-*.xcarchive
