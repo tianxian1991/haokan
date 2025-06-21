@@ -1,2 +1,31 @@
 # CocoaPods
 Pods/
+Podfile.lock
+Podfile
+
+# Xcode
+*.xcworkspace
+xcuserdata/
+*.xcuserdatad/
+*.xcuserstate
+*.xcscheme
+*.dSYM
+*.hmap
+
+# Douyin project files
+Douyin.xcodeproj/project.pbxproj
+Douyin.xcodeproj/xcuserdata/
+Douyin.xcworkspace/xcuserdata/
+Pods/Manifest.lock
+Pods/Pods.xcodeproj/project.pbxproj
+Pods/Target\ Support\ Files/Pods-Douyin/Pods-Douyin.debug.xcconfig
+Pods/Target\ Support\ Files/Pods-Douyin/Pods-Douyin.release.xcconfig
+
+# Derived Data
+DerivedData/
+
+# Archives
+*.xcarchive
+
+
+ No newline at end of file
